@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "isolatedModules": true,
+    "types": [
+      "../src/audio-worklet-global-scope"
+    ]
+  },
+  "extends": "tsconfig-holy-grail/src/tsconfig-universal"
+}
