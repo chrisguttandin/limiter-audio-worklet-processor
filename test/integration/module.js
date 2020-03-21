@@ -1,11 +1,14 @@
-import { AudioWorkletNode, ConstantSourceNode, OfflineAudioContext } from 'standardized-audio-context';
+import { AudioBuffer, AudioBufferSourceNode, AudioWorkletNode, ConstantSourceNode, OfflineAudioContext } from 'standardized-audio-context';
 
 describe('module', () => {
 
-    let audioWorkletNode;
-    let channelData;
-    let constantSourceNode;
     let offlineAudioContext;
+
+    beforeEach(async () => {
+        offlineAudioContext = new OfflineAudioContext({ length: 128, sampleRate: 44100 });
+
+        await offlineAudioContext.audioWorklet.addModule('base/src/module.js');
+    });
 
     after(function (done) {
         this.timeout(5000);
@@ -14,30 +17,66 @@ describe('module', () => {
         setTimeout(done, 1000);
     });
 
-    beforeEach(async () => {
-        offlineAudioContext = new OfflineAudioContext({ length: 128, sampleRate: 44100 });
+    describe('with a constant signal', () => {
 
-        await offlineAudioContext.audioWorklet.addModule('base/src/module.js');
+        let audioWorkletNode;
+        let channelData;
+        let constantSourceNode;
 
-        audioWorkletNode = new AudioWorkletNode(offlineAudioContext, 'limiter-audio-worklet-processor');
-        constantSourceNode = new ConstantSourceNode(offlineAudioContext, { offset: 1 });
+        beforeEach(() => {
+            audioWorkletNode = new AudioWorkletNode(offlineAudioContext, 'limiter-audio-worklet-processor');
+            constantSourceNode = new ConstantSourceNode(offlineAudioContext, { offset: 1 });
 
-        constantSourceNode
-            .connect(audioWorkletNode)
-            .connect(offlineAudioContext.destination);
-        constantSourceNode.start();
+            constantSourceNode
+                .connect(audioWorkletNode)
+                .connect(offlineAudioContext.destination);
+            constantSourceNode.start();
 
-        channelData = new Float32Array(128);
+            channelData = new Float32Array(128);
+        });
+
+        it('should limit the signal', async () => {
+            const renderedBuffer = await offlineAudioContext.startRendering();
+
+            renderedBuffer.copyFromChannel(channelData, 0);
+
+            for (const sample of channelData) {
+                expect(sample).to.equal(Math.fround(10 ** -0.1));
+            }
+        });
+
     });
 
-    it('should limit the signal', async () => {
-        const renderedBuffer = await offlineAudioContext.startRendering();
+    describe('with a spiky signal', () => {
 
-        renderedBuffer.copyFromChannel(channelData, 0);
+        let audioBufferSourceNode;
+        let audioWorkletNode;
+        let channelData;
 
-        for (const sample of channelData) {
-            expect(sample).to.equal(Math.fround(10 ** -0.1));
-        }
+        beforeEach(() => {
+            const audioBuffer = new AudioBuffer({ length: 128, sampleRate: 44100 });
+
+            audioBuffer.copyToChannel(new Float32Array([ 1, 0, 10, 0, 100 ]), 0, 0);
+
+            audioBufferSourceNode = new AudioBufferSourceNode(offlineAudioContext, { buffer: audioBuffer });
+            audioWorkletNode = new AudioWorkletNode(offlineAudioContext, 'limiter-audio-worklet-processor');
+
+            audioBufferSourceNode
+                .connect(audioWorkletNode)
+                .connect(offlineAudioContext.destination);
+            audioBufferSourceNode.start();
+
+            channelData = new Float32Array(5);
+        });
+
+        it('should limit the signal', async () => {
+            const renderedBuffer = await offlineAudioContext.startRendering();
+
+            renderedBuffer.copyFromChannel(channelData, 0);
+
+            expect(channelData).to.deep.equal(new Float32Array([ 10 ** -0.1, 0, 10 ** -0.1, 0, 10 ** -0.1 ]));
+        });
+
     });
 
 });

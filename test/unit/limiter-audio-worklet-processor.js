@@ -20,6 +20,30 @@ describe('LimiterAudioWorkletProcessor', () => {
             };
         });
 
+        describe('with an attack that is not a number', () => {
+
+            beforeEach(() => {
+                options.processorOptions = { attack: 'something other than a number' };
+            });
+
+            it('should throw an error', () => {
+                expect(() => new LimiterAudioWorkletProcessor(options)).to.throw(Error, 'The attack needs to be of type "number".');
+            });
+
+        });
+
+        describe('with an attack that is below zero', () => {
+
+            beforeEach(() => {
+                options.processorOptions = { attack: -3 };
+            });
+
+            it('should throw an error', () => {
+                expect(() => new LimiterAudioWorkletProcessor(options)).to.throw(Error, "The attack can't be negative.");
+            });
+
+        });
+
         describe('without a matching channelCount', () => {
 
             beforeEach(() => {
@@ -96,49 +120,111 @@ describe('LimiterAudioWorkletProcessor', () => {
 
     describe('process()', () => {
 
-        let limiterAudioWorkletProcessor;
+        describe('without a specified attack', () => {
 
-        beforeEach(() => {
-            limiterAudioWorkletProcessor = new LimiterAudioWorkletProcessor({
-                channelCount: 1,
-                channelCountMode: 'explicit',
-                numberOfInputs: 1,
-                numberOfOutputs: 1,
-                outputChannelCount: [ 1 ]
+            let limiterAudioWorkletProcessor;
+
+            beforeEach(() => {
+                limiterAudioWorkletProcessor = new LimiterAudioWorkletProcessor({
+                    channelCount: 1,
+                    channelCountMode: 'explicit',
+                    numberOfInputs: 1,
+                    numberOfOutputs: 1,
+                    outputChannelCount: [ 1 ]
+                });
             });
+
+            it('should return true', () => {
+                expect(limiterAudioWorkletProcessor.process([ [ ] ], [ [ ] ])).to.be.true;
+            });
+
+            it('should pass through a signal below the threshold', () => {
+                const inputs = [ [ generateRandomChannelDataBelowThreshold() ] ];
+                const outputs = [ [ generateSilentChannelData() ] ];
+
+                limiterAudioWorkletProcessor.process(inputs, outputs);
+
+                expect(outputs).to.deep.equal(inputs);
+            });
+
+            it('should limit a signal above the threshold', () => {
+                const inputs = [ [ generateRandomChannelDataAboveThreshold() ] ];
+                const outputs = [ [ new Float32Array(inputs[0][0]) ] ];
+
+                limiterAudioWorkletProcessor.process(inputs, outputs);
+
+                expect(outputs).to.not.deep.equal(inputs);
+            });
+
+            it('should limit a signal outside the nominal range', () => {
+                const inputs = [ [ generateRandomChannelDataOutsideNominalRange() ] ];
+                const outputs = [ [ new Float32Array(inputs[0][0]) ] ];
+
+                limiterAudioWorkletProcessor.process(inputs, outputs);
+
+                for (const sample of outputs[0][0]) {
+                    expect(sample).to.be.within(-1, 1);
+                }
+            });
+
         });
 
-        it('should return true', () => {
-            expect(limiterAudioWorkletProcessor.process([ [ ] ], [ [ ] ])).to.be.true;
-        });
+        describe('with a specified attack', () => {
 
-        it('should pass through a signal below the threshold', () => {
-            const inputs = [ [ generateRandomChannelDataBelowThreshold() ] ];
-            const outputs = [ [ generateSilentChannelData() ] ];
+            let limiterAudioWorkletProcessor;
 
-            limiterAudioWorkletProcessor.process(inputs, outputs);
+            beforeEach(() => {
+                limiterAudioWorkletProcessor = new LimiterAudioWorkletProcessor({
+                    channelCount: 1,
+                    channelCountMode: 'explicit',
+                    numberOfInputs: 1,
+                    numberOfOutputs: 1,
+                    outputChannelCount: [ 1 ],
+                    processorOptions: {
+                        attack: 128 / sampleRate // eslint-disable-line no-undef
+                    }
+                });
+            });
 
-            expect(outputs).to.deep.equal(inputs);
-        });
+            it('should return true', () => {
+                expect(limiterAudioWorkletProcessor.process([ [ ] ], [ [ ] ])).to.be.true;
+            });
 
-        it('should limit a signal above the threshold', () => {
-            const inputs = [ [ generateRandomChannelDataAboveThreshold() ] ];
-            const outputs = [ [ new Float32Array(inputs[0][0]) ] ];
+            it('should delay the signal by 128 samples', () => {
+                const inputs = [ [ generateRandomChannelDataBelowThreshold() ] ];
+                const outputs = [ [ new Float32Array(inputs[0][0]) ] ];
 
-            limiterAudioWorkletProcessor.process(inputs, outputs);
+                limiterAudioWorkletProcessor.process(inputs, outputs);
 
-            expect(outputs).to.not.deep.equal(inputs);
-        });
+                expect(outputs).to.deep.equal([ [ generateSilentChannelData() ] ]);
 
-        it('should limit a signal outside the nominal range', () => {
-            const inputs = [ [ generateRandomChannelDataOutsideNominalRange() ] ];
-            const outputs = [ [ new Float32Array(inputs[0][0]) ] ];
+                limiterAudioWorkletProcessor.process([ [ generateRandomChannelDataBelowThreshold() ] ], outputs);
 
-            limiterAudioWorkletProcessor.process(inputs, outputs);
+                expect(outputs).to.deep.equal(inputs);
+            });
 
-            for (const sample of outputs[0][0]) {
-                expect(sample).to.be.within(-1, 1);
-            }
+            it('should limit a signal above the threshold', () => {
+                const inputs = [ [ generateRandomChannelDataAboveThreshold() ] ];
+                const outputs = [ [ new Float32Array(inputs[0][0]) ] ];
+
+                limiterAudioWorkletProcessor.process(inputs, [ [ generateSilentChannelData() ] ]);
+                limiterAudioWorkletProcessor.process([ [ generateRandomChannelDataAboveThreshold() ] ], outputs);
+
+                expect(outputs).to.not.deep.equal(inputs);
+            });
+
+            it('should limit a signal outside the nominal range', () => {
+                const inputs = [ [ generateRandomChannelDataOutsideNominalRange() ] ];
+                const outputs = [ [ new Float32Array(inputs[0][0]) ] ];
+
+                limiterAudioWorkletProcessor.process(inputs, [ [ generateSilentChannelData() ] ]);
+                limiterAudioWorkletProcessor.process([ [ generateRandomChannelDataOutsideNominalRange() ] ], outputs);
+
+                for (const sample of outputs[0][0]) {
+                    expect(sample).to.be.within(-1, 1);
+                }
+            });
+
         });
 
     });

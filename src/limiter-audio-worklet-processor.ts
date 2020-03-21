@@ -1,22 +1,59 @@
+import { ConstantMemoryDeque } from './classes/constant-memory-deque';
+import { readFromRingBuffer } from './functions/read-from-ring-buffer';
+import { writeToRingBuffer } from './functions/write-to-ring-buffer';
 import { IAudioWorkletProcessor } from './interfaces';
 
-const ATTACK_TIME_SECONDS = 0;
-const ATTACK_GAIN = Math.exp(-1 / (sampleRate * ATTACK_TIME_SECONDS));
 const RELEASE_TIME_SECONDS = 0.5;
 const RELEASE_GAIN = Math.exp(-1 / (sampleRate * RELEASE_TIME_SECONDS));
 const THRESHOLD = 10 ** -0.1;
 
-const computeEnvelope = (channelData: Float32Array, envelopeBuffer: Float32Array): void => {
+const computeEnvelope = (
+    envelopeBuffer: Float32Array,
+    delayBuffer: Float32Array,
+    offset: number,
+    constantMemoryDeque: null | ConstantMemoryDeque
+): void => {
     let previousEnvelopeValue = envelopeBuffer[127];
 
     for (let i = 0; i < 128; i += 1) {
-        const absoluteValue = Math.abs(channelData[i]);
-        const difference = previousEnvelopeValue - absoluteValue;
+        const readOffset = (offset + i) % delayBuffer.length;
+        const absoluteValue = Math.abs(delayBuffer[readOffset]);
 
-        if (previousEnvelopeValue < absoluteValue) {
-            previousEnvelopeValue = absoluteValue + (ATTACK_GAIN * difference);
+        let maximumValue;
+        let remainingSteps;
+
+        if (constantMemoryDeque !== null) {
+            while (constantMemoryDeque.size > 0 && absoluteValue >= Math.abs(delayBuffer[constantMemoryDeque.first()])) {
+                constantMemoryDeque.shift();
+            }
+
+            if (constantMemoryDeque.size === 0 || absoluteValue < Math.abs(delayBuffer[constantMemoryDeque.first()])) {
+                constantMemoryDeque.unshift(readOffset);
+            }
+
+            const dropOffset = (offset + i + 128) % delayBuffer.length;
+
+            if (constantMemoryDeque.last() === dropOffset) {
+                constantMemoryDeque.pop();
+            }
+
+            const indexOfMaximum = constantMemoryDeque.last();
+
+            maximumValue = Math.abs(delayBuffer[indexOfMaximum]);
+            remainingSteps = (indexOfMaximum < readOffset)
+                ? readOffset - indexOfMaximum + 1
+                : readOffset + delayBuffer.length - indexOfMaximum + 1;
         } else {
-            previousEnvelopeValue = absoluteValue + (RELEASE_GAIN * difference);
+            maximumValue = absoluteValue;
+            remainingSteps = 1;
+        }
+
+        const difference = previousEnvelopeValue - maximumValue;
+
+        if (previousEnvelopeValue < maximumValue) {
+            previousEnvelopeValue = previousEnvelopeValue - (difference / remainingSteps);
+        } else {
+            previousEnvelopeValue = maximumValue + (RELEASE_GAIN * difference);
         }
 
         envelopeBuffer[i] = previousEnvelopeValue;
@@ -27,9 +64,34 @@ export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implemen
 
     public static parameterDescriptors = [ ];
 
+    private _constantMemoryDeques: null | ConstantMemoryDeque[];
+
+    private _delayBuffers: Float32Array[];
+
     private _envelopeBuffers: Float32Array[];
 
-    constructor ({ channelCount, channelCountMode, numberOfInputs, numberOfOutputs, outputChannelCount }: AudioWorkletNodeOptions) {
+    private _writeOffset: number;
+
+    constructor ({
+        channelCount,
+        channelCountMode,
+        numberOfInputs,
+        numberOfOutputs,
+        outputChannelCount,
+        processorOptions
+    }: AudioWorkletNodeOptions) {
+        const attack = (typeof processorOptions === 'object' && processorOptions !== null && 'attack' in processorOptions)
+            ? processorOptions.attack
+            : 0;
+
+        if (typeof attack !== 'number') {
+            throw new Error('The attack needs to be of type "number".');
+        }
+
+        if (attack < 0) {
+            throw new Error("The attack can't be negative.");
+        }
+
         if (channelCountMode !== 'explicit') {
             throw new Error('The channelCountMode needs to be "explicit".');
         }
@@ -48,20 +110,34 @@ export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implemen
 
         super();
 
+        const attackSamples = sampleRate * attack;
+        const delaySize = Math.round(attackSamples);
+        const delayBufferSize = delaySize + 128;
+
+        this._constantMemoryDeques = (delaySize === 0)
+            ? null
+            : Array.from({ length: channelCount }, () => new ConstantMemoryDeque(new Uint16Array(delaySize + 1)));
+        this._delayBuffers = Array.from({ length: channelCount }, () => new Float32Array(delayBufferSize));
         this._envelopeBuffers = Array.from({ length: channelCount }, () => new Float32Array(128));
+        this._writeOffset = 0;
     }
 
     public process ([ input ]: Float32Array[][], [ output ]: Float32Array[][]): boolean {
         const numberOfChannels = input.length;
+        const writeOffset = this._writeOffset;
 
         for (let channel = 0; channel < numberOfChannels; channel += 1) {
+            const constantMemoryDeque = (this._constantMemoryDeques === null) ? null : this._constantMemoryDeques[channel];
+            const delayBuffer = this._delayBuffers[channel];
             const envelopeBuffer = this._envelopeBuffers[channel];
             const inputChannelData = input[channel];
             const outputChannelData = output[channel];
 
-            outputChannelData.set(inputChannelData);
+            this._writeOffset = writeToRingBuffer(delayBuffer, inputChannelData, writeOffset);
 
-            computeEnvelope(inputChannelData, envelopeBuffer);
+            computeEnvelope(envelopeBuffer, delayBuffer, writeOffset, constantMemoryDeque);
+
+            readFromRingBuffer(delayBuffer, outputChannelData, this._writeOffset);
 
             for (let i = 0; i < 128; i += 1) {
                 const gain = Math.min(1, (THRESHOLD / envelopeBuffer[i]));
