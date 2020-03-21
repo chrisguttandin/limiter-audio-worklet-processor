@@ -4,11 +4,7 @@ const ATTACK_TIME_SECONDS = 0;
 const ATTACK_GAIN = Math.exp(-1 / (sampleRate * ATTACK_TIME_SECONDS));
 const RELEASE_TIME_SECONDS = 0.5;
 const RELEASE_GAIN = Math.exp(-1 / (sampleRate * RELEASE_TIME_SECONDS));
-const THRESHOLD_DB = -2;
-
-const amplitudeToDecibel = (amplitude: number): number => 20 * Math.log10(amplitude);
-
-const decibelToAmplitude = (decibel: number): number => Math.pow(10, decibel / 20);
+const THRESHOLD = 10 ** -0.1;
 
 const computeEnvelope = (channelData: Float32Array, envelopeBuffer: Float32Array): void => {
     let previousEnvelopeValue = envelopeBuffer[127];
@@ -68,8 +64,7 @@ export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implemen
             computeEnvelope(inputChannelData, envelopeBuffer);
 
             for (let i = 0; i < 128; i += 1) {
-                const gainDb = THRESHOLD_DB - amplitudeToDecibel(envelopeBuffer[i]);
-                const gain = decibelToAmplitude(Math.min(0, gainDb));
+                const gain = Math.min(1, (THRESHOLD / envelopeBuffer[i]));
 
                 outputChannelData[i] *= gain;
             }
