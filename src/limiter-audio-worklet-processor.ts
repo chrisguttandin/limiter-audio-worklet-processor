@@ -40,9 +40,8 @@ const computeEnvelope = (
             const indexOfMaximum = constantMemoryDeque.last();
 
             maximumValue = Math.abs(delayBuffer[indexOfMaximum]);
-            remainingSteps = (indexOfMaximum < readOffset)
-                ? readOffset - indexOfMaximum + 1
-                : readOffset + delayBuffer.length - indexOfMaximum + 1;
+            remainingSteps =
+                indexOfMaximum < readOffset ? readOffset - indexOfMaximum + 1 : readOffset + delayBuffer.length - indexOfMaximum + 1;
         } else {
             maximumValue = absoluteValue;
             remainingSteps = 1;
@@ -51,9 +50,9 @@ const computeEnvelope = (
         const difference = previousEnvelopeValue - maximumValue;
 
         if (previousEnvelopeValue < maximumValue) {
-            previousEnvelopeValue = previousEnvelopeValue - (difference / remainingSteps);
+            previousEnvelopeValue = previousEnvelopeValue - difference / remainingSteps;
         } else {
-            previousEnvelopeValue = maximumValue + (RELEASE_GAIN * difference);
+            previousEnvelopeValue = maximumValue + RELEASE_GAIN * difference;
         }
 
         envelopeBuffer[i] = previousEnvelopeValue;
@@ -61,8 +60,7 @@ const computeEnvelope = (
 };
 
 export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implements IAudioWorkletProcessor {
-
-    public static parameterDescriptors = [ ];
+    public static parameterDescriptors = [];
 
     private _constantMemoryDeques: null | ConstantMemoryDeque[];
 
@@ -72,7 +70,7 @@ export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implemen
 
     private _writeOffset: number;
 
-    constructor ({
+    constructor({
         channelCount,
         channelCountMode,
         numberOfInputs,
@@ -80,9 +78,8 @@ export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implemen
         outputChannelCount,
         processorOptions
     }: AudioWorkletNodeOptions) {
-        const attack = (typeof processorOptions === 'object' && processorOptions !== null && 'attack' in processorOptions)
-            ? processorOptions.attack
-            : 0;
+        const attack =
+            typeof processorOptions === 'object' && processorOptions !== null && 'attack' in processorOptions ? processorOptions.attack : 0;
 
         if (typeof attack !== 'number') {
             throw new Error('The attack needs to be of type "number".');
@@ -114,20 +111,19 @@ export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implemen
         const delaySize = Math.round(attackSamples);
         const delayBufferSize = delaySize + 128;
 
-        this._constantMemoryDeques = (delaySize === 0)
-            ? null
-            : Array.from({ length: channelCount }, () => new ConstantMemoryDeque(new Uint16Array(delaySize + 1)));
+        this._constantMemoryDeques =
+            delaySize === 0 ? null : Array.from({ length: channelCount }, () => new ConstantMemoryDeque(new Uint16Array(delaySize + 1)));
         this._delayBuffers = Array.from({ length: channelCount }, () => new Float32Array(delayBufferSize));
         this._envelopeBuffers = Array.from({ length: channelCount }, () => new Float32Array(128));
         this._writeOffset = 0;
     }
 
-    public process ([ input ]: Float32Array[][], [ output ]: Float32Array[][]): boolean {
+    public process([input]: Float32Array[][], [output]: Float32Array[][]): boolean {
         const numberOfChannels = input.length;
         const writeOffset = this._writeOffset;
 
         for (let channel = 0; channel < numberOfChannels; channel += 1) {
-            const constantMemoryDeque = (this._constantMemoryDeques === null) ? null : this._constantMemoryDeques[channel];
+            const constantMemoryDeque = this._constantMemoryDeques === null ? null : this._constantMemoryDeques[channel];
             const delayBuffer = this._delayBuffers[channel];
             const envelopeBuffer = this._envelopeBuffers[channel];
             const inputChannelData = input[channel];
@@ -140,7 +136,7 @@ export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implemen
             readFromRingBuffer(delayBuffer, outputChannelData, this._writeOffset);
 
             for (let i = 0; i < 128; i += 1) {
-                const gain = Math.min(1, (THRESHOLD / envelopeBuffer[i]));
+                const gain = Math.min(1, THRESHOLD / envelopeBuffer[i]);
 
                 outputChannelData[i] *= gain;
             }
@@ -148,5 +144,4 @@ export class LimiterAudioWorkletProcessor extends AudioWorkletProcessor implemen
 
         return true;
     }
-
 }

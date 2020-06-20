@@ -1,9 +1,7 @@
 const { env } = require('process');
 
 module.exports = (config) => {
-
     config.set({
-
         basePath: '../../',
 
         browserNoActivityTimeout: 420000,
@@ -12,7 +10,7 @@ module.exports = (config) => {
             mochaWebWorker: {
                 evaluate: {
                     // This is basically a part of the functionality which karma-sinon-chai would provide in a Window.
-                    beforeRun : `(function(self) {
+                    beforeRun: `(function(self) {
                         self.expect = self.chai.expect;
                     })(self);`,
                     beforeScripts: `(function(self) {
@@ -22,14 +20,7 @@ module.exports = (config) => {
                         self.sampleRate = 44100;
                     })(self);`
                 },
-                pattern: [
-                    '**/chai/**',
-                    '**/leche/**',
-                    '**/lolex/**',
-                    '**/sinon/**',
-                    '**/sinon-chai/**',
-                    'test/unit/**/*.js'
-                ]
+                pattern: ['**/chai/**', '**/leche/**', '**/lolex/**', '**/sinon/**', '**/sinon-chai/**', 'test/unit/**/*.js']
             }
         },
 
@@ -39,7 +30,8 @@ module.exports = (config) => {
                 pattern: 'src/**',
                 served: true,
                 watched: true
-            }, {
+            },
+            {
                 included: false,
                 pattern: 'test/unit/**/*.js',
                 served: true,
@@ -47,13 +39,10 @@ module.exports = (config) => {
             }
         ],
 
-        frameworks: [
-            'mocha-webworker',
-            'sinon-chai'
-        ],
+        frameworks: ['mocha-webworker', 'sinon-chai'],
 
         mime: {
-            'text/x-typescript': [ 'ts', 'tsx' ]
+            'text/x-typescript': ['ts', 'tsx']
         },
 
         preprocessors: {
@@ -64,28 +53,27 @@ module.exports = (config) => {
         webpack: {
             mode: 'development',
             module: {
-                rules: [ {
-                    test: /\.ts?$/,
-                    use: {
-                        loader: 'ts-loader'
+                rules: [
+                    {
+                        test: /\.ts?$/,
+                        use: {
+                            loader: 'ts-loader'
+                        }
                     }
-                } ]
+                ]
             },
             resolve: {
-                extensions: [ '.js', '.ts' ]
+                extensions: ['.js', '.ts']
             }
         },
 
         webpackMiddleware: {
             noInfo: true
         }
-
     });
 
     if (env.TRAVIS) {
-
         config.set({
-
             browsers: [
                 'ChromeSauceLabs',
                 'FirefoxSauceLabs'
@@ -113,25 +101,12 @@ module.exports = (config) => {
             },
 
             tunnelIdentifier: env.TRAVIS_JOB_NUMBER
-
         });
-
     } else {
-
         config.set({
-
-            browsers: [
-                'ChromeHeadless',
-                'ChromeCanaryHeadless',
-                'FirefoxHeadless',
-                'FirefoxDeveloperHeadless',
-                'Safari'
-            ],
+            browsers: ['ChromeHeadless', 'ChromeCanaryHeadless', 'FirefoxHeadless', 'FirefoxDeveloperHeadless', 'Safari'],
 
             concurrency: 2
-
         });
-
     }
-
 };

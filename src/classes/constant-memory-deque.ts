@@ -1,12 +1,11 @@
 export class ConstantMemoryDeque {
-
     private _firstIndex: number;
 
     private _isEmpty: boolean;
 
     private _lastIndex: number;
 
-    constructor (private _buffer: Uint16Array) {
+    constructor(private _buffer: Uint16Array) {
         this._firstIndex = 0;
         this._isEmpty = true;
         this._lastIndex = 0;
@@ -16,27 +15,27 @@ export class ConstantMemoryDeque {
         }
     }
 
-    get size (): number {
-        return (this._isEmpty)
+    get size(): number {
+        return this._isEmpty
             ? 0
-            : (this._lastIndex < this._firstIndex)
-                ? this._buffer.length - this._firstIndex + this._lastIndex + 1
-                : this._lastIndex - this._firstIndex + 1;
+            : this._lastIndex < this._firstIndex
+            ? this._buffer.length - this._firstIndex + this._lastIndex + 1
+            : this._lastIndex - this._firstIndex + 1;
     }
 
-    public first (): number {
+    public first(): number {
         this._throwIfEmpty();
 
         return this._buffer[this._firstIndex];
     }
 
-    public last (): number {
+    public last(): number {
         this._throwIfEmpty();
 
         return this._buffer[this._lastIndex];
     }
 
-    public pop (): void {
+    public pop(): void {
         this._throwIfEmpty();
 
         if (this._firstIndex === this._lastIndex) {
@@ -46,7 +45,7 @@ export class ConstantMemoryDeque {
         }
     }
 
-    public shift (): void {
+    public shift(): void {
         this._throwIfEmpty();
 
         if (this._firstIndex === this._lastIndex) {
@@ -56,7 +55,7 @@ export class ConstantMemoryDeque {
         }
     }
 
-    public unshift (value: number): void {
+    public unshift(value: number): void {
         if (this._isEmpty) {
             this._buffer[this._firstIndex] = value;
             this._isEmpty = false;
@@ -72,18 +71,17 @@ export class ConstantMemoryDeque {
         }
     }
 
-    private _decrementIndex (index: number): number {
-        return (index === 0) ? this._buffer.length - 1 : index - 1;
+    private _decrementIndex(index: number): number {
+        return index === 0 ? this._buffer.length - 1 : index - 1;
     }
 
-    private _incrementIndex (index: number): number {
+    private _incrementIndex(index: number): number {
         return (index + 1) % this._buffer.length;
     }
 
-    private _throwIfEmpty (): void {
+    private _throwIfEmpty(): void {
         if (this._isEmpty) {
             throw new Error('Deque is empty.');
         }
     }
-
 }

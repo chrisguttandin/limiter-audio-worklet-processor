@@ -1,17 +1,13 @@
 import { ConstantMemoryDeque } from '../../../src/classes/constant-memory-deque';
 
 describe('ConstantMemoryDeque', () => {
-
     describe('constructor()', () => {
-
         it('should throw an error', () => {
             expect(() => new ConstantMemoryDeque(new Uint16Array(0))).to.throw(Error, 'The given buffer is too small.');
         });
-
     });
 
     describe('size', () => {
-
         let constantMemoryDeque;
 
         beforeEach(() => {
@@ -49,11 +45,9 @@ describe('ConstantMemoryDeque', () => {
 
             expect(constantMemoryDeque.size).to.equal(3);
         });
-
     });
 
     describe('first()', () => {
-
         let constantMemoryDeque;
 
         beforeEach(() => {
@@ -89,11 +83,9 @@ describe('ConstantMemoryDeque', () => {
 
             expect(constantMemoryDeque.first()).to.equal(5);
         });
-
     });
 
     describe('last()', () => {
-
         let constantMemoryDeque;
 
         beforeEach(() => {
@@ -130,11 +122,9 @@ describe('ConstantMemoryDeque', () => {
 
             expect(constantMemoryDeque.last()).to.equal(3);
         });
-
     });
 
     describe('pop()', () => {
-
         let constantMemoryDeque;
 
         beforeEach(() => {
@@ -155,11 +145,9 @@ describe('ConstantMemoryDeque', () => {
 
             expect(constantMemoryDeque.last()).to.equal(1);
         });
-
     });
 
     describe('shift()', () => {
-
         let constantMemoryDeque;
 
         beforeEach(() => {
@@ -180,11 +168,9 @@ describe('ConstantMemoryDeque', () => {
 
             expect(constantMemoryDeque.first()).to.equal(0);
         });
-
     });
 
     describe('unshift()', () => {
-
         let constantMemoryDeque;
 
         beforeEach(() => {
@@ -208,7 +194,5 @@ describe('ConstantMemoryDeque', () => {
 
             expect(constantMemoryDeque.first()).to.equal(1);
         });
-
     });
-
 });

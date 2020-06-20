@@ -4,8 +4,8 @@
  * the registerProcessor function.
  */
 
-interface Event { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface Event {
     readonly AT_TARGET: number;
 
     readonly bubbles: boolean;
@@ -40,58 +40,49 @@ interface Event { // tslint:disable-line:interface-name
 
     readonly type: string;
 
-    deepPath (): EventTarget[];
+    deepPath(): EventTarget[];
 
-    initEvent (type: string, bubbles?: boolean, cancelable?: boolean): void;
+    initEvent(type: string, bubbles?: boolean, cancelable?: boolean): void;
 
-    preventDefault (): void;
+    preventDefault(): void;
 
-    stopImmediatePropagation (): void;
+    stopImmediatePropagation(): void;
 
-    stopPropagation (): void;
-
+    stopPropagation(): void;
 }
 
 type EventListener = (evt: Event) => void;
 
-interface EventListenerObject { // tslint:disable-line:interface-name
-
-    handleEvent (evt: Event): void;
-
+// tslint:disable-next-line:interface-name
+interface EventListenerObject {
+    handleEvent(evt: Event): void;
 }
 
-interface EventListenerOptions { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface EventListenerOptions {
     capture?: boolean;
-
 }
 
-interface AddEventListenerOptions extends EventListenerOptions { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface AddEventListenerOptions extends EventListenerOptions {
     once?: boolean;
 
     passive?: boolean;
-
 }
 
 type EventListenerOrEventListenerObject = EventListener | EventListenerObject;
 
-interface EventTarget { // tslint:disable-line:interface-name
+// tslint:disable-next-line:interface-name
+interface EventTarget {
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void;
 
-    addEventListener (type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void;
+    dispatchEvent(evt: Event): boolean;
 
-    dispatchEvent (evt: Event): boolean;
-
-    removeEventListener (
-        type: string,
-        listener?: EventListenerOrEventListenerObject | null,
-        options?: EventListenerOptions | boolean
-    ): void;
-
+    removeEventListener(type: string, listener?: EventListenerOrEventListenerObject | null, options?: EventListenerOptions | boolean): void;
 }
 
-interface MessageEvent extends Event { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface MessageEvent extends Event {
     readonly data: any;
 
     readonly origin: string;
@@ -100,7 +91,7 @@ interface MessageEvent extends Event { // tslint:disable-line:interface-name
 
     readonly source: object | null;
 
-    initMessageEvent (
+    initMessageEvent(
         type: string,
         bubbles: boolean,
         cancelable: boolean,
@@ -109,57 +100,51 @@ interface MessageEvent extends Event { // tslint:disable-line:interface-name
         lastEventId: string,
         source: object
     ): void;
-
 }
 
-interface MessagePortEventMap { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface MessagePortEventMap {
     message: MessageEvent;
-
 }
 
-interface MessagePort extends EventTarget { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface MessagePort extends EventTarget {
     onmessage: ((this: MessagePort, ev: MessageEvent) => any) | null;
 
-    addEventListener <K extends keyof MessagePortEventMap> (
+    addEventListener<K extends keyof MessagePortEventMap>(
         type: K,
         listener: (this: MessagePort, ev: MessagePortEventMap[K]) => any,
         options?: boolean | AddEventListenerOptions
     ): void;
-    addEventListener (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
 
-    close (): void;
+    close(): void;
 
-    postMessage (message?: any, transfer?: any[]): void;
+    postMessage(message?: any, transfer?: any[]): void;
 
-    removeEventListener <K extends keyof MessagePortEventMap> (
+    removeEventListener<K extends keyof MessagePortEventMap>(
         type: K,
         listener: (this: MessagePort, ev: MessagePortEventMap[K]) => any,
         options?: boolean | EventListenerOptions
     ): void;
-    removeEventListener (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 
-    start (): void;
-
+    start(): void;
 }
 
 declare var MessagePort: {
-
     prototype: MessagePort;
 
     new (): MessagePort;
-
 };
 
-interface AudioWorkletProcessor { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface AudioWorkletProcessor {
     port: MessagePort;
-
 }
 
-interface AudioParamDescriptor { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface AudioParamDescriptor {
     defaultValue?: number;
 
     maxValue?: number;
@@ -167,47 +152,41 @@ interface AudioParamDescriptor { // tslint:disable-line:interface-name
     minValue?: number;
 
     name: string;
-
 }
 
-interface AudioNodeOptions { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface AudioNodeOptions {
     channelCount: number;
 
     channelCountMode: 'clamped-max' | 'explicit' | 'max';
 
     channelInterpretation: 'discrete' | 'speakers';
-
 }
 
-interface AudioWorkletNodeOptions extends AudioNodeOptions { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface AudioWorkletNodeOptions extends AudioNodeOptions {
     numberOfInputs?: number;
 
     numberOfOutputs?: number;
 
     outputChannelCount: number[];
 
-    parameterData: { [ name: string ]: number };
+    parameterData: { [name: string]: number };
 
     processorOptions?: any;
-
 }
 
-interface AudioWorkletProcessorConstructor { // tslint:disable-line:interface-name
-
+// tslint:disable-next-line:interface-name
+interface AudioWorkletProcessorConstructor {
     parameterDescriptors: AudioParamDescriptor[];
 
     new (options: AudioWorkletNodeOptions): AudioWorkletProcessor;
-
 }
 
 declare var AudioWorkletProcessor: {
-
     prototype: AudioWorkletProcessor;
 
     new (): AudioWorkletProcessor;
-
 };
 
 declare const currentFrame: number;
@@ -216,4 +195,4 @@ declare const currentTime: number;
 
 declare const sampleRate: number;
 
-declare function registerProcessor <T extends AudioWorkletProcessorConstructor> (name: string, processorCtor: T): void;
+declare function registerProcessor<T extends AudioWorkletProcessorConstructor>(name: string, processorCtor: T): void;

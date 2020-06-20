@@ -3,14 +3,14 @@ export const writeToRingBuffer = (target: Float32Array, source: Float32Array, of
     if (theoreticalNextOffset <= target.length) {
         target.set(source, offset);
 
-        return (theoreticalNextOffset === target.length) ? 0 : theoreticalNextOffset;
+        return theoreticalNextOffset === target.length ? 0 : theoreticalNextOffset;
     }
 
     const nextOffset = theoreticalNextOffset - target.length;
     const lengthOfFirstChunk = target.length - offset;
 
     target.set(new Float32Array(source.buffer, source.byteOffset, lengthOfFirstChunk), offset);
-    target.set(new Float32Array(source.buffer, source.byteOffset + (lengthOfFirstChunk * source.BYTES_PER_ELEMENT), nextOffset));
+    target.set(new Float32Array(source.buffer, source.byteOffset + lengthOfFirstChunk * source.BYTES_PER_ELEMENT, nextOffset));
 
     return nextOffset;
 };
