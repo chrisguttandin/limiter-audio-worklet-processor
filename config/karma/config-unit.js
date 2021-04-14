@@ -20,10 +20,21 @@ module.exports = (config) => {
                         self.AudioWorkletProcessor = class { };
                         self.currentFrame = 0;
                         self.currentTime = 0;
+                        self.registerProcessor = () => { };
                         self.sampleRate = 44100;
                     })(self);`
                 },
-                pattern: ['**/chai/**', '**/leche/**', '**/lolex/**', '**/sinon/**', '**/sinon-chai/**', 'test/unit/**/*.js']
+                pattern: [
+                    '/absolute**',
+                    '/absolute/**',
+                    '**/chai/**',
+                    '**/leche/**',
+                    '**/lolex/**',
+                    '**/mocha/**',
+                    '**/sinon/**',
+                    '**/sinon-chai/**',
+                    'test/unit/**/*.js'
+                ]
             }
         },
 
@@ -44,7 +55,7 @@ module.exports = (config) => {
             }
         ],
 
-        frameworks: ['mocha-webworker', 'sinon-chai'],
+        frameworks: ['mocha-webworker', 'sinon-chai', 'webpack'],
 
         preprocessors: {
             'src/**/!(*.d).ts': 'webpack',
@@ -60,7 +71,13 @@ module.exports = (config) => {
                     {
                         test: /\.ts?$/,
                         use: {
-                            loader: 'ts-loader'
+                            loader: 'ts-loader',
+                            options: {
+                                compilerOptions: {
+                                    declaration: false,
+                                    declarationMap: false
+                                }
+                            }
                         }
                     }
                 ]
@@ -73,7 +90,8 @@ module.exports = (config) => {
                 })
             ],
             resolve: {
-                extensions: ['.js', '.ts']
+                extensions: ['.js', '.ts'],
+                fallback: { util: false }
             }
         },
 

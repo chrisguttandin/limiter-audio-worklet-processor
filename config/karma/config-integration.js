@@ -1,5 +1,7 @@
 const { env } = require('process');
 const { DefinePlugin } = require('webpack');
+const webpack = require('webpack');
+const MemoryFileSystem = require('memory-fs');
 
 module.exports = (config) => {
     config.set({
@@ -8,24 +10,6 @@ module.exports = (config) => {
         browserDisconnectTimeout: 100000,
 
         browserNoActivityTimeout: 100000,
-
-        client: {
-            mochaWebWorker: {
-                evaluate: {
-                    // This is basically a part of the functionality which karma-sinon-chai would provide in a Window.
-                    beforeRun: `(function(self) {
-                        self.expect = self.chai.expect;
-                    })(self);`,
-                    beforeScripts: `(function(self) {
-                        self.AudioWorkletProcessor = class { };
-                        self.currentFrame = 0;
-                        self.currentTime = 0;
-                        self.sampleRate = 44100;
-                    })(self);`
-                },
-                pattern: ['**/chai/**', '**/leche/**', '**/lolex/**', '**/sinon/**', '**/sinon-chai/**', 'test/unit/**/*.js']
-            }
-        },
 
         concurrency: 1,
 
@@ -39,7 +23,76 @@ module.exports = (config) => {
             'test/integration/**/*.js'
         ],
 
-        frameworks: ['mocha', 'sinon-chai'],
+        frameworks: ['mocha', 'sinon-chai', 'webpack'],
+
+        middleware: ['webpack'],
+
+        plugins: [
+            {
+                'middleware:webpack': [
+                    'factory',
+                    function () {
+                        return (req, res, next) => {
+                            if (req.url.startsWith('/base/') && req.url.endsWith('.js')) {
+                                const parts = req.url.split(/\//);
+                                const name = parts.pop().slice(0, -3);
+                                const path = parts
+                                    .slice(2)
+                                    .map((part) => `/${part}`)
+                                    .join('');
+                                const memoryFileSystem = new MemoryFileSystem();
+                                const compiler = webpack({
+                                    entry: {
+                                        [name]: `.${path}/${name}`
+                                    },
+                                    mode: 'development',
+                                    module: {
+                                        rules: [
+                                            {
+                                                test: /\.ts?$/,
+                                                use: {
+                                                    loader: 'ts-loader',
+                                                    options: {
+                                                        compilerOptions: {
+                                                            declaration: false,
+                                                            declarationMap: false
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    output: {
+                                        filename: '[name].js',
+                                        path: '/'
+                                    },
+                                    resolve: {
+                                        extensions: ['.js', '.ts'],
+                                        fallback: { util: false }
+                                    }
+                                });
+
+                                compiler.outputFileSystem = memoryFileSystem;
+                                compiler.run((err, stats) => {
+                                    if (err !== null) {
+                                        next(err);
+                                    } else if (stats.hasErrors() || stats.hasWarnings()) {
+                                        next(new Error(stats.toString({ errorDetails: true, warnings: true })));
+                                    } else {
+                                        res.setHeader('content-type', 'application/javascript');
+
+                                        memoryFileSystem.createReadStream(`/${name}.js`).pipe(res);
+                                    }
+                                });
+                            } else {
+                                next();
+                            }
+                        };
+                    }
+                ]
+            },
+            'karma-*'
+        ],
 
         preprocessors: {
             'src/**/!(*.d).ts': 'webpack',
@@ -55,7 +108,13 @@ module.exports = (config) => {
                     {
                         test: /\.ts?$/,
                         use: {
-                            loader: 'ts-loader'
+                            loader: 'ts-loader',
+                            options: {
+                                compilerOptions: {
+                                    declaration: false,
+                                    declarationMap: false
+                                }
+                            }
                         }
                     }
                 ]
@@ -68,7 +127,8 @@ module.exports = (config) => {
                 })
             ],
             resolve: {
-                extensions: ['.js', '.ts']
+                extensions: ['.js', '.ts'],
+                fallback: { util: false }
             }
         },
 
