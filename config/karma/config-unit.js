@@ -24,6 +24,10 @@ module.exports = (config) => {
                         self.sampleRate = 44100;
                     })(self);`
                 },
+                mocha: {
+                    bail: true,
+                    timeout: 20000
+                },
                 pattern: [
                     '/absolute**',
                     '/absolute/**',
