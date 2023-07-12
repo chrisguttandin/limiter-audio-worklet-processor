@@ -72,6 +72,7 @@
         "url": "https://github.com/chrisguttandin/limiter-audio-worklet-processor.git"
     },
     "scripts": {
+        "lint:config": "eslint --config config/eslint/config.json --ext .js --report-unused-disable-directives config/",
         "prepare": "husky install",
         "prepublishOnly": "grunt build",
         "test": "grunt lint && grunt test"
