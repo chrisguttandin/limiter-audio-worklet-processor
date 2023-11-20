@@ -9,13 +9,6 @@ describe('module', () => {
         await offlineAudioContext.audioWorklet.addModule('base/src/module.js');
     });
 
-    after(function (done) {
-        this.timeout(5000);
-
-        // @todo This is an optimistic fix to prevent the famous 'Some of your tests did a full page reload!' error.
-        setTimeout(done, 1000);
-    });
-
     describe('with a constant signal', () => {
         let audioWorkletNode;
         let channelData;
