@@ -173,7 +173,7 @@ interface AudioWorkletNodeOptions extends AudioNodeOptions {
 
     parameterData: { [name: string]: number };
 
-    processorOptions?: any;
+    processorOptions?: unknown;
 }
 
 // tslint:disable-next-line:interface-name
