@@ -9,7 +9,7 @@
         }
     },
     "dependencies": {
-        "@babel/runtime": "^7.27.1",
+        "@babel/runtime": "^7.27.6",
         "tslib": "^2.8.1"
     },
     "description": "The AudioWorkletProcessor which is used by the limiter-audio-worklet package.",
