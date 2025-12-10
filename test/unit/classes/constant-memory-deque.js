@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ConstantMemoryDeque } from '../../../src/classes/constant-memory-deque';
 
 describe('ConstantMemoryDeque', () => {

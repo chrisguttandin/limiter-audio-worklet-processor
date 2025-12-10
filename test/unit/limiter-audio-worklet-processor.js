@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from 'vitest';
 import { LimiterAudioWorkletProcessor } from '../../src/limiter-audio-worklet-processor';
 import { generateRandomChannelDataAboveThreshold } from '../helpers/generate-random-channel-data-above-threshold';
 import { generateRandomChannelDataBelowThreshold } from '../helpers/generate-random-channel-data-below-threshold';

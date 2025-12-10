@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from 'vitest';
 import { writeToRingBuffer } from '../../../src/functions/write-to-ring-buffer';
 
 describe('writeToRingBuffer()', () => {

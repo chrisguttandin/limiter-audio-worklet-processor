@@ -1,4 +1,5 @@
 import { AudioBuffer, AudioBufferSourceNode, AudioWorkletNode, ConstantSourceNode, OfflineAudioContext } from 'standardized-audio-context';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 describe('module', () => {
     let offlineAudioContext;
@@ -6,7 +7,7 @@ describe('module', () => {
     beforeEach(async () => {
         offlineAudioContext = new OfflineAudioContext({ length: 128, sampleRate: 44100 });
 
-        await offlineAudioContext.audioWorklet.addModule('base/src/module.js');
+        await offlineAudioContext.audioWorklet.addModule('../../src/module');
     });
 
     describe('with a constant signal', () => {
