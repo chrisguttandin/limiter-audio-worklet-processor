@@ -11,9 +11,7 @@ export default defineConfig({
             transform: (code: string, id: string) => {
                 if (id.endsWith('/src/module.ts')) {
                     const compiler = webpack({
-                        entry: {
-                            module: id
-                        },
+                        entry: { module: id },
                         mode: 'development',
                         module: {
                             rules: [
@@ -21,24 +19,13 @@ export default defineConfig({
                                     test: /\.ts?$/,
                                     use: {
                                         loader: 'ts-loader',
-                                        options: {
-                                            compilerOptions: {
-                                                declaration: false,
-                                                declarationMap: false
-                                            }
-                                        }
+                                        options: { compilerOptions: { declaration: false, declarationMap: false } }
                                     }
                                 }
                             ]
                         },
-                        output: {
-                            filename: 'module.js',
-                            path: '/'
-                        },
-                        resolve: {
-                            extensions: ['.js', '.ts'],
-                            fallback: { util: false }
-                        }
+                        output: { filename: 'module.js', path: '/' },
+                        resolve: { extensions: ['.js', '.ts'], fallback: { util: false } }
                     });
                     // @ts-expect-error
                     compiler.outputFileSystem = fs;
@@ -61,7 +48,7 @@ export default defineConfig({
         }
     ],
     test: {
-        watch: false,
+        bail: 1,
         browser: {
             enabled: true,
             instances: env.CI
@@ -71,56 +58,35 @@ export default defineConfig({
                       ? [{ browser: 'firefox', name: 'Firefox', provider: webdriverio() }]
                       : []
                 : [
+                      { browser: 'chrome', headless: true, name: 'Chrome', provider: webdriverio() },
                       {
                           browser: 'chrome',
-                          name: 'Chrome',
-                          provider: webdriverio({
-                              capabilities: {
-                                  'goog:chromeOptions': {
-                                      args: ['--headless']
-                                  }
-                              }
-                          })
-                      },
-                      {
-                          browser: 'chrome',
+                          headless: true,
                           name: 'Chrome Canary',
                           provider: webdriverio({
                               capabilities: {
                                   'goog:chromeOptions': {
-                                      args: ['--headless'],
                                       binary: '/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary'
                                   }
                               }
                           })
                       },
                       {
+                          browser: 'firefox',
+                          headless: true,
                           name: 'Firefox Developer',
-                          browser: 'firefox',
                           provider: webdriverio({
                               capabilities: {
-                                  'moz:firefoxOptions': {
-                                      args: ['-headless'],
-                                      binary: '/Applications/Firefox\ Developer\ Edition.app/Contents/MacOS/firefox'
-                                  }
+                                  'moz:firefoxOptions': { binary: '/Applications/Firefox\ Developer\ Edition.app/Contents/MacOS/firefox' }
                               }
                           })
                       },
-                      {
-                          browser: 'firefox',
-                          name: 'Firefox',
-                          provider: webdriverio({
-                              capabilities: {
-                                  'moz:firefoxOptions': {
-                                      args: ['-headless']
-                                  }
-                              }
-                          })
-                      },
-                      { browser: 'safari', name: 'Safari', provider: webdriverio() }
+                      { browser: 'firefox', headless: true, name: 'Firefox', provider: webdriverio() },
+                      { browser: 'safari', headless: false, name: 'Safari', provider: webdriverio() }
                   ]
         },
         dir: 'test/integration/',
-        include: ['**/*.js']
+        include: ['**/*.js'],
+        watch: false
     }
 });

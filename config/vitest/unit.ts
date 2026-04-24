@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
     test: {
-        watch: false,
+        bail: 1,
         browser: {
             enabled: true,
             instances: env.CI
@@ -14,57 +14,36 @@ export default defineConfig({
                       ? [{ browser: 'firefox', name: 'Firefox', provider: webdriverio() }]
                       : []
                 : [
+                      { browser: 'chrome', headless: true, name: 'Chrome', provider: webdriverio() },
                       {
                           browser: 'chrome',
-                          name: 'Chrome',
-                          provider: webdriverio({
-                              capabilities: {
-                                  'goog:chromeOptions': {
-                                      args: ['--headless']
-                                  }
-                              }
-                          })
-                      },
-                      {
-                          browser: 'chrome',
+                          headless: true,
                           name: 'Chrome Canary',
                           provider: webdriverio({
                               capabilities: {
                                   'goog:chromeOptions': {
-                                      args: ['--headless'],
                                       binary: '/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary'
                                   }
                               }
                           })
                       },
                       {
+                          browser: 'firefox',
+                          headless: true,
                           name: 'Firefox Developer',
-                          browser: 'firefox',
                           provider: webdriverio({
                               capabilities: {
-                                  'moz:firefoxOptions': {
-                                      args: ['-headless'],
-                                      binary: '/Applications/Firefox\ Developer\ Edition.app/Contents/MacOS/firefox'
-                                  }
+                                  'moz:firefoxOptions': { binary: '/Applications/Firefox\ Developer\ Edition.app/Contents/MacOS/firefox' }
                               }
                           })
                       },
-                      {
-                          browser: 'firefox',
-                          name: 'Firefox',
-                          provider: webdriverio({
-                              capabilities: {
-                                  'moz:firefoxOptions': {
-                                      args: ['-headless']
-                                  }
-                              }
-                          })
-                      },
-                      { browser: 'safari', name: 'Safari', provider: webdriverio() }
+                      { browser: 'firefox', headless: true, name: 'Firefox', provider: webdriverio() },
+                      { browser: 'safari', headless: false, name: 'Safari', provider: webdriverio() }
                   ]
         },
         dir: 'test/unit/',
         include: ['**/*.js'],
-        setupFiles: ['config/vitest/unit-setup.ts']
+        setupFiles: ['config/vitest/unit-setup.ts'],
+        watch: false
     }
 });
