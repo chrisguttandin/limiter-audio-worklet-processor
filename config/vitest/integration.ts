@@ -4,6 +4,7 @@ import { fs } from 'memfs';
 import { defineConfig } from 'vitest/config';
 import { webpack } from 'webpack';
 
+// eslint-disable-next-line import/no-default-export
 export default defineConfig({
     plugins: [
         {
@@ -27,7 +28,8 @@ export default defineConfig({
                         output: { filename: 'module.js', path: '/' },
                         resolve: { extensions: ['.js', '.ts'], fallback: { util: false } }
                     });
-                    // @ts-expect-error
+
+                    // @ts-expect-error "outputFileSystem" is not assignable.
                     compiler.outputFileSystem = fs;
 
                     return new Promise((resolve, reject) => {
@@ -37,6 +39,7 @@ export default defineConfig({
                             } else if (stats?.hasErrors() || stats?.hasWarnings()) {
                                 reject(new Error(stats.toString({ errorDetails: true, warnings: true })));
                             } else {
+                                // eslint-disable-next-line node/no-sync
                                 resolve(<string>fs.readFileSync('/module.js', { encoding: 'utf8' }));
                             }
                         });
@@ -66,7 +69,7 @@ export default defineConfig({
                           provider: webdriverio({
                               capabilities: {
                                   'goog:chromeOptions': {
-                                      binary: '/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary'
+                                      binary: '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
                                   }
                               }
                           })
@@ -77,7 +80,7 @@ export default defineConfig({
                           name: 'Firefox Developer',
                           provider: webdriverio({
                               capabilities: {
-                                  'moz:firefoxOptions': { binary: '/Applications/Firefox\ Developer\ Edition.app/Contents/MacOS/firefox' }
+                                  'moz:firefoxOptions': { binary: '/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox' }
                               }
                           })
                       },
